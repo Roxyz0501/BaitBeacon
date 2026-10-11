@@ -111,32 +111,10 @@ public sealed class Plugin : IDalamudPlugin
                     DrawLists();
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem(T("Settings") + "###Settings"))
-                {
-                    DrawSettings();
-                    ImGui.EndTabItem();
-                }
-                if (ImGui.BeginTabItem(T("LanguageSettings") + "###LanguageSettings"))
-                {
-                    var changed = StandardPluginTabs.DrawLanguageSelector(
-                        T("Language"), T("LanguageHelp"), config.Language ?? "en");
-                    if (changed is not null)
-                    {
-                        config.Language = changed;
-                        commandInfo.HelpMessage = T("CommandHelp");
-                        Save();
-                    }
-                    ImGui.EndTabItem();
-                }
-                StandardPluginTabs.PushSupportTabStyle();
-                var support = ImGui.BeginTabItem(T("Support") + "###Support");
-                StandardPluginTabs.PopSupportTabStyle();
-                if (support)
-                {
-                    StandardPluginTabs.DrawSupportContent(T("SupportHeading"), T("SupportText"),
-                        T("SupportRecipient"), T("OpenKoFi"));
-                    ImGui.EndTabItem();
-                }
+                StandardPluginTabs.DrawStandardTrailingTabs(
+                    T("Settings"), "Settings", DrawSettings,
+                    T("LanguageSettings"), DrawLanguageSettings,
+                    T("Support"), DrawSupport);
                 ImGui.EndTabBar();
             }
         }
@@ -209,6 +187,19 @@ public sealed class Plugin : IDalamudPlugin
             Save();
         }
     }
+
+    private void DrawLanguageSettings()
+    {
+        var changed = StandardPluginTabs.DrawLanguageSelector(
+            T("Language"), T("LanguageHelp"), config.Language ?? "en");
+        if (changed is null) return;
+        config.Language = changed;
+        commandInfo.HelpMessage = T("CommandHelp");
+        Save();
+    }
+
+    private void DrawSupport() => StandardPluginTabs.DrawSupportContent(
+        T("SupportHeading"), T("SupportText"), T("SupportRecipient"), T("OpenKoFi"));
 
     private void PluginStatus(string internalName)
     {

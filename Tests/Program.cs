@@ -46,6 +46,26 @@ try
     Check(Loc.Languages.Select(x => (x.Code, x.Native))
           .SequenceEqual(StandardPluginTabs.Languages.Select(x => (x.Code, x.SelfName))),
         "shared tab language order and native names");
+    static string ResourceText(string name)
+    {
+        using var stream = typeof(StandardPluginTabs).Assembly.GetManifestResourceStream(name)
+            ?? throw new Exception("Missing resource " + name);
+        using var reader = new StreamReader(stream);
+        return reader.ReadToEnd();
+    }
+    var pluginSource = ResourceText("BaitBeacon.Plugin.cs");
+    var tabsSource = ResourceText("BaitBeacon.StandardPluginTabs.cs");
+    var listsTab = pluginSource.IndexOf("ImGui.BeginTabItem(T(\"Lists\")", StringComparison.Ordinal);
+    var sharedTabs = pluginSource.IndexOf("StandardPluginTabs.DrawStandardTrailingTabs(", StringComparison.Ordinal);
+    Check(listsTab >= 0 && sharedTabs > listsTab
+          && pluginSource.LastIndexOf("StandardPluginTabs.DrawStandardTrailingTabs(", StringComparison.Ordinal) == sharedTabs
+          && pluginSource.IndexOf("ImGui.BeginTabItem(", listsTab + 1, StringComparison.Ordinal) < 0,
+        "one shared trailing tab group after Lists");
+    var settingsTab = tabsSource.IndexOf("BeginTabItem($\"{settingsLabel}###{settingsStableId}\")", StringComparison.Ordinal);
+    var languageTab = tabsSource.IndexOf("BeginTabItem($\"{languageSettingsLabel}###LanguageSettings\")", StringComparison.Ordinal);
+    var supportTab = tabsSource.IndexOf("BeginTabItem($\"{supportLabel}###Support\")", StringComparison.Ordinal);
+    Check(settingsTab >= 0 && languageTab > settingsTab && supportTab > languageTab,
+        "shared settings language support tab order");
     Check(Loc.Get("ja", "LanguageSettings") == "言語設定"
           && Loc.Get("ja", "Support") == "支援"
           && Loc.Get("en", "LanguageHelp").Length > 0
