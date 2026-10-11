@@ -1,4 +1,5 @@
 using BaitBeacon;
+using Roxyz0501.Dalamud.CommonUi;
 
 static void Check(bool result, string name)
 {
@@ -42,6 +43,14 @@ try
     Check(catalog.Resolve([999999], _ => false).UnknownFishIds.SetEquals([999999u]),
         "unresolved selected fish is reported");
     Loc.CheckCompleteness();
+    Check(Loc.Languages.Select(x => (x.Code, x.Native))
+          .SequenceEqual(StandardPluginTabs.Languages.Select(x => (x.Code, x.SelfName))),
+        "shared tab language order and native names");
+    Check(Loc.Get("ja", "LanguageSettings") == "言語設定"
+          && Loc.Get("ja", "Support") == "支援"
+          && Loc.Get("en", "LanguageHelp").Length > 0
+          && Loc.Get("en", "SupportRecipient").Contains("Roxyz0501"),
+        "language and support tab localization");
     Check(Loc.FontText.Contains("한국어") && Loc.FontText.Contains("简体中文")
           && Loc.FontText.Contains("繁體中文") && Loc.FontText.Contains('—'),
         "font glyph list covers language names and item separator");
@@ -64,6 +73,14 @@ try
     configuration.Language = "Auto";
     Check(configuration.InitializeLanguage(null, "zh") && configuration.Language == "en",
         "ambiguous language resolves to English");
+    foreach (var savedCode in new[] { "ja", "en" })
+    {
+        var migrated = System.Text.Json.JsonSerializer.Deserialize<Configuration>(
+            "{\"Language\":\"" + savedCode + "\",\"SelectedList\":\"Weekend/Fishing\",\"HighlightEnabled\":false}")!;
+        Check(!migrated.InitializeLanguage(Dalamud.Game.ClientLanguage.French, "de")
+              && migrated.Language == savedCode && migrated.SelectedList == "Weekend/Fishing"
+              && !migrated.HighlightEnabled, "saved " + savedCode + " config preserved");
+    }
 }
 finally
 {

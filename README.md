@@ -4,7 +4,7 @@ An independent Dalamud plugin by Roxyz0501. Select a saved GatherBuddy Reborn Au
 
 ## Status
 
-Public preview `0.1.0.1`. In-game overlay placement and the updated font coverage still require verification.
+Public preview `1.0.0.0`. In-game overlay placement and font coverage still require verification.
 
 ## Use
 
@@ -16,7 +16,7 @@ The bundled fish-to-bait data is a snapshot of all available upstream patch file
 
 ## Languages
 
-Config offers Japanese, English, German, French, Korean, Simplified Chinese, and Traditional Chinese. At first run, game language is preferred, then a supported Dalamud UI language, then English. The chosen language is saved and can be changed at any time. Game item names use the language data provided by the game.
+The separate **Language settings** tab offers Japanese, English, German, French, Korean, Simplified Chinese, and Traditional Chinese. At first run, game language is preferred, then a supported Dalamud UI language, then English. The chosen language is saved and can be changed at any time without restarting. Game item names use the language data provided by the game. The separate **Support** tab uses the shared Roxyz0501 design and opens Ko-fi only when its button is clicked.
 
 ## Credits and data
 

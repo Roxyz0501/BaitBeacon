@@ -13,10 +13,13 @@ public static class Loc
     private static readonly Dictionary<string, string[]> Text = new()
     {
         ["Title"] = ["餌の目印", "Bait Beacon", "Köderanzeige", "Repère d’appâts", "미끼 표시", "鱼饵标记", "魚餌標記"],
+        ["CommandHelp"] = ["Bait Beacon を開きます。", "Open Bait Beacon.", "Bait Beacon öffnen.", "Ouvrir Bait Beacon.", "Bait Beacon을 엽니다.", "打开 Bait Beacon。", "開啟 Bait Beacon。"],
         ["Lists"] = ["リスト", "Lists", "Listen", "Listes", "목록", "列表", "清單"],
         ["Settings"] = ["設定", "Settings", "Einstellungen", "Paramètres", "설정", "设置", "設定"],
+        ["LanguageSettings"] = ["言語設定", "Language settings", "Spracheinstellungen", "Paramètres de langue", "언어 설정", "语言设置", "語言設定"],
         ["Support"] = ["支援", "Support", "Unterstützen", "Soutien", "후원", "支持", "支援"],
         ["Language"] = ["言語 / Language", "Language / 言語", "Sprache / Language", "Langue / Language", "언어 / Language", "语言 / Language", "語言 / Language"],
+        ["LanguageHelp"] = ["表示言語を選択します。変更はすぐに反映され、次回起動後も保持されます。", "Choose the display language. Changes apply immediately and remain after restarting.", "Wähle die Anzeigesprache. Die Änderung gilt sofort und bleibt nach dem Neustart erhalten.", "Choisissez la langue d’affichage. Le changement s’applique aussitôt et reste enregistré après le redémarrage.", "표시 언어를 선택하세요. 변경 사항은 즉시 적용되며 다시 시작해도 유지됩니다.", "选择显示语言。更改会立即生效，并在重新启动后保留。", "選擇顯示語言。變更會立即生效，重新啟動後仍會保留。"],
         ["Dependency"] = ["前提プラグイン", "Companion plugins", "Begleit-Plugins", "Plugins associés", "연동 플러그인", "关联插件", "關聯外掛"],
         ["Installed"] = ["導入済み", "Installed", "Installiert", "Installé", "설치됨", "已安装", "已安裝"],
         ["Loaded"] = ["読み込み中", "Loaded", "Geladen", "Chargé", "로드됨", "已加载", "已載入"],
@@ -34,6 +37,8 @@ public static class Loc
         ["Retainer"] = ["リテイナーの強調表示", "Highlight retainers", "Gehilfen-Inventar hervorheben", "Surligner les servants", "집사 소지품 강조", "高亮雇员背包", "醒目提示雇員背包"],
         ["ListError"] = ["リストの読み込みに失敗しました。最後に読み込めた内容を表示します。", "Could not read the list file. Showing the last valid data.", "Listendatei konnte nicht gelesen werden. Letzte gültige Daten werden angezeigt.", "Lecture du fichier impossible. Dernières données valides affichées.", "목록 파일을 읽지 못했습니다. 마지막으로 읽은 정보를 표시합니다.", "无法读取列表文件。正在显示上次有效的数据。", "無法讀取清單檔案。正在顯示上次有效資料。"],
         ["SupportText"] = ["Roxyz0501 を任意で支援できます。", "You can optionally support Roxyz0501.", "Du kannst Roxyz0501 freiwillig unterstützen.", "Vous pouvez soutenir Roxyz0501 si vous le souhaitez.", "원한다면 Roxyz0501을 후원할 수 있습니다.", "你可以自愿支持 Roxyz0501。", "你可以自願支持 Roxyz0501。"],
+        ["SupportHeading"] = ["任意の支援", "Optional support", "Freiwillige Unterstützung", "Soutien facultatif", "선택적 후원", "自愿支持", "自願支持"],
+        ["SupportRecipient"] = ["支援先: Roxyz0501", "Recipient: Roxyz0501", "Empfänger: Roxyz0501", "Bénéficiaire : Roxyz0501", "후원 받는 사람: Roxyz0501", "收款人：Roxyz0501", "受款人：Roxyz0501"],
         ["OpenKoFi"] = ["Ko-fi を開く", "Open Ko-fi", "Ko-fi öffnen", "Ouvrir Ko-fi", "Ko-fi 열기", "打开 Ko-fi", "開啟 Ko-fi"],
         ["None"] = ["なし", "None", "Keine", "Aucun", "없음", "无", "無"],
         ["Count"] = ["所持品内: {0}", "In inventory: {0}", "Im Inventar: {0}", "Dans l’inventaire : {0}", "소지품: {0}", "背包中：{0}", "背包中：{0}"],

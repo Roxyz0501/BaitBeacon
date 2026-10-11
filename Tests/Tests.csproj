@@ -10,7 +10,9 @@
     <Compile Include="../BaitBeacon/BaitCatalog.cs" Link="BaitCatalog.cs" />
     <Compile Include="../BaitBeacon/Loc.cs" Link="Loc.cs" />
     <Compile Include="../BaitBeacon/Configuration.cs" Link="Configuration.cs" />
+    <Compile Include="../BaitBeacon/StandardPluginTabs.cs" Link="StandardPluginTabs.cs" />
     <EmbeddedResource Include="../BaitBeacon/Data/fish-bait.json" LogicalName="BaitBeacon.Data.fish-bait.json" />
     <Reference Include="Dalamud" HintPath="$(appdata)\XIVLauncher\addon\Hooks\dev\Dalamud.dll" />
+    <Reference Include="Dalamud.Bindings.ImGui" HintPath="$(appdata)\XIVLauncher\addon\Hooks\dev\Dalamud.Bindings.ImGui.dll" />
   </ItemGroup>
 </Project>

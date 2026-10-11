@@ -6,6 +6,7 @@ using Dalamud.Game.Inventory;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
+using Roxyz0501.Dalamud.CommonUi;
 
 namespace BaitBeacon;
 
@@ -14,6 +15,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string Command = "/baitbeacon";
     private readonly IDalamudPluginInterface pi;
     private readonly ICommandManager commands;
+    private readonly CommandInfo commandInfo;
     private readonly IFramework framework;
     private readonly IGameInventory gameInventory;
     private readonly IDataManager data;
@@ -57,10 +59,11 @@ public sealed class Plugin : IDalamudPlugin
             FontItemNames().Concat(lists.Lists.SelectMany(x => new[] { x.Name, x.Folder })));
         Recalculate();
 
-        commands.AddHandler(Command, new CommandInfo((_, _) => open = true)
+        commandInfo = new CommandInfo((_, _) => open = true)
         {
-            HelpMessage = "Open Bait Beacon.",
-        });
+            HelpMessage = T("CommandHelp"),
+        };
+        commands.AddHandler(Command, commandInfo);
         framework.Update += Update;
         pi.UiBuilder.Draw += Draw;
         pi.UiBuilder.OpenMainUi += Open;
@@ -101,17 +104,6 @@ public sealed class Plugin : IDalamudPlugin
         ImGui.SetNextWindowSizeConstraints(new Vector2(390, 290), new Vector2(float.MaxValue));
         if (ImGui.Begin(T("Title") + "###BaitBeacon", ref open))
         {
-            ImGui.TextUnformatted(T("Language"));
-            ImGui.SameLine();
-            var language = Array.FindIndex(Loc.Languages, x => x.Code == config.Language);
-            if (language < 0) language = 1;
-            ImGui.SetNextItemWidth(180);
-            if (ImGui.Combo("###Language", ref language, string.Join("\0", Loc.Languages.Select(x => x.Native)) + "\0"))
-            {
-                config.Language = Loc.Languages[language].Code;
-                Save();
-            }
-
             if (ImGui.BeginTabBar("BaitBeaconTabs"))
             {
                 if (ImGui.BeginTabItem(T("Lists") + "###Lists"))
@@ -124,17 +116,25 @@ public sealed class Plugin : IDalamudPlugin
                     DrawSettings();
                     ImGui.EndTabItem();
                 }
-                ImGui.PushStyleColor(ImGuiCol.Tab, new Vector4(0.42f, 0.24f, 0.04f, 1));
-                ImGui.PushStyleColor(ImGuiCol.TabHovered, new Vector4(0.67f, 0.38f, 0.05f, 1));
-                ImGui.PushStyleColor(ImGuiCol.TabActive, new Vector4(0.53f, 0.30f, 0.04f, 1));
-                ImGui.PushStyleColor(ImGuiCol.Text, Vector4.One);
+                if (ImGui.BeginTabItem(T("LanguageSettings") + "###LanguageSettings"))
+                {
+                    var changed = StandardPluginTabs.DrawLanguageSelector(
+                        T("Language"), T("LanguageHelp"), config.Language ?? "en");
+                    if (changed is not null)
+                    {
+                        config.Language = changed;
+                        commandInfo.HelpMessage = T("CommandHelp");
+                        Save();
+                    }
+                    ImGui.EndTabItem();
+                }
+                StandardPluginTabs.PushSupportTabStyle();
                 var support = ImGui.BeginTabItem(T("Support") + "###Support");
-                ImGui.PopStyleColor(4);
+                StandardPluginTabs.PopSupportTabStyle();
                 if (support)
                 {
-                    ImGui.TextWrapped(T("SupportText"));
-                    if (ImGui.Button(T("OpenKoFi")))
-                        Dalamud.Utility.Util.OpenLink("https://ko-fi.com/roxyz0501");
+                    StandardPluginTabs.DrawSupportContent(T("SupportHeading"), T("SupportText"),
+                        T("SupportRecipient"), T("OpenKoFi"));
                     ImGui.EndTabItem();
                 }
                 ImGui.EndTabBar();
