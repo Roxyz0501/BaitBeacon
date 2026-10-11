@@ -1,0 +1,12 @@
+{
+  "Author": "Roxyz0501",
+  "Name": "Bait Beacon",
+  "InternalName": "BaitBeacon",
+  "RepoUrl": "https://github.com/Roxyz0501/BaitBeacon",
+  "IconUrl": "https://raw.githubusercontent.com/Roxyz0501/BaitBeacon/main/BaitBeacon/images/icon.png",
+  "Punchline": "Highlight bait for a saved GatherBuddy Reborn Auto-Gather list.",
+  "Description": "Select a saved GatherBuddy Reborn Auto-Gather list and highlight required fishing bait in inventory windows. Includes seven UI languages. Command: /baitbeacon",
+  "ApplicableVersion": "any",
+  "DalamudApiLevel": 15,
+  "Tags": ["fishing", "gathering", "inventory", "utility"]
+}

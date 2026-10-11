@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../BaitBeacon/SavedLists.cs" Link="SavedLists.cs" />
+    <Compile Include="../BaitBeacon/BaitCatalog.cs" Link="BaitCatalog.cs" />
+    <Compile Include="../BaitBeacon/Loc.cs" Link="Loc.cs" />
+    <Compile Include="../BaitBeacon/Configuration.cs" Link="Configuration.cs" />
+    <EmbeddedResource Include="../BaitBeacon/Data/fish-bait.json" LogicalName="BaitBeacon.Data.fish-bait.json" />
+    <Reference Include="Dalamud" HintPath="$(appdata)\XIVLauncher\addon\Hooks\dev\Dalamud.dll" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,55 @@
+using BaitBeacon;
+
+static void Check(bool result, string name)
+{
+    if (!result) throw new Exception(name);
+    Console.WriteLine("PASS " + name);
+}
+
+var root = Path.Combine(Path.GetTempPath(), "BaitBeaconTests-" + Guid.NewGuid().ToString("N"));
+var own = Path.Combine(root, "BaitBeacon");
+var reborn = Path.Combine(root, "GatherbuddyReborn");
+Directory.CreateDirectory(own);
+Directory.CreateDirectory(reborn);
+try
+{
+    var path = Path.Combine(reborn, "auto_gather_lists.json");
+    File.WriteAllText(path, """
+      [
+        {"Name":"Fishing","FolderPath":"Weekend","ItemIds":[36679,41299,42],"EnabledItems":{"42":false}},
+        {"Name":"Legacy","ItemIds":[36679]}
+      ]
+      """);
+    var lists = new SavedLists(own);
+    Check(lists.Lists.Count == 2, "saved lists load");
+    Check(lists.Lists[0].Key == "Weekend/Fishing", "folder path identity");
+    Check(lists.Lists[0].ItemIds.SequenceEqual([36679u, 41299u]), "disabled items excluded");
+    Check(lists.Lists[1].ItemIds.SequenceEqual([36679u]), "older list without enabled map");
+    File.WriteAllText(path, "{ broken");
+    lists.Reload();
+    Check(lists.Error == "read" && lists.Lists.Count == 2, "partial rewrite keeps last valid list");
+
+    var catalog = new BaitCatalog();
+    var baits = catalog.Resolve([36679, 41299], id => id is 36593 or 38808);
+    Check(baits.BaitIds.ToHashSet().SetEquals([36593u, 38808u]), "direct and mooch bait resolution");
+    Check(baits.UnknownFishIds.Count == 0, "known fish resolved");
+    Loc.CheckCompleteness();
+    Check(Loc.Normalize("zh_TW") == "zh-Hant" && Loc.Normalize("zh") is null, "Chinese script normalization");
+    Check(Loc.FromGame(Dalamud.Game.ClientLanguage.Japanese) == "ja", "game language precedence input");
+    var configuration = new Configuration();
+    Check(configuration.InitializeLanguage(Dalamud.Game.ClientLanguage.Japanese, "de") && configuration.Language == "ja",
+        "first launch prefers game language");
+    configuration.Language = "ko";
+    Check(!configuration.InitializeLanguage(Dalamud.Game.ClientLanguage.English, "de") && configuration.Language == "ko",
+        "saved choice remains fixed");
+    configuration.Language = null;
+    Check(configuration.InitializeLanguage(null, "zh_CN") && configuration.Language == "zh-Hans",
+        "Dalamud language fallback");
+    configuration.Language = "Auto";
+    Check(configuration.InitializeLanguage(null, "zh") && configuration.Language == "en",
+        "ambiguous language resolves to English");
+}
+finally
+{
+    Directory.Delete(root, true);
+}

@@ -1,0 +1,8 @@
+Bait Beacon: Copyright 2026 Roxyz0501.
+
+The fish-to-bait relationship data in Data/fish-bait.json was derived from
+GatherBuddy Reborn, copyright its contributors, licensed under Apache-2.0:
+https://github.com/FFXIV-CombatReborn/GatherBuddyReborn
+
+The JSON list format was studied for read-only interoperability. This project
+contains no copied GatherBuddy Reborn implementation source.
