@@ -4,15 +4,15 @@ An independent Dalamud plugin by Roxyz0501. Select a saved GatherBuddy Reborn Au
 
 ## Status
 
-Public preview `0.1.0.0`. In-game placement and font coverage still require verification.
+Public preview `0.1.0.1`. In-game overlay placement and the updated font coverage still require verification.
 
 ## Use
 
-Open `/baitbeacon`, select a saved list, and open your inventory. The plugin reads GatherBuddy Reborn's `auto_gather_lists.json` without changing it. It checks whether GatherBuddy Reborn is installed and loaded in Config. A saved list can be viewed even while GatherBuddy Reborn is not running.
+Open `/baitbeacon`, select a saved list, and open your inventory. The plugin reads GatherBuddy Reborn's `auto_gather_lists.json` without changing it. Use the **Enable highlighting** checkbox on the list or Settings tab to turn all markers on or off. Settings also has separate switches for inventory, saddlebags and retainers. It checks whether GatherBuddy Reborn is installed and loaded in Config. A saved list can be viewed even while GatherBuddy Reborn is not running.
 
 Original GatherBuddy has gathering lists but no compatible Auto-Gather list file, so it is shown as informational and is not used as a source.
 
-The bundled fish-to-bait data is a snapshot of upstream data on 2026-10-11. Fish absent from that data are listed separately instead of guessed. GatherBuddy Reborn user-defined fish overrides are not read.
+The bundled fish-to-bait data is a snapshot of all available upstream patch files on 2026-10-11. Mooch routes use the target fish's explicit initial bait when specified; otherwise they trace to the mooch source fish's bait. Predator fish bait is also included. Spearfishing items are skipped because they need no bait. Only selected rod fish with no resolvable bait route are listed as unknown. GatherBuddy Reborn user-defined fish overrides are not read.
 
 ## Languages
 

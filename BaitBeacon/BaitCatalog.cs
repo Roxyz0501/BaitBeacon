@@ -30,26 +30,41 @@ public sealed class BaitCatalog
     {
         var baits = new HashSet<uint>();
         var unknown = new HashSet<uint>();
-        var visited = new HashSet<uint>();
-        foreach (var id in fishIds) Visit(id, isBait, visited, baits, unknown);
+        var resolved = new Dictionary<uint, bool>();
+        var visiting = new HashSet<uint>();
+        foreach (var id in fishIds)
+            if (!Visit(id, isBait, resolved, visiting, baits)) unknown.Add(id);
         return new BaitResult(baits, unknown);
     }
 
-    private void Visit(uint fish, Func<uint, bool> isBait, HashSet<uint> visited, HashSet<uint> baits, HashSet<uint> unknown)
+    private bool Visit(uint fish, Func<uint, bool> isBait, Dictionary<uint, bool> resolved,
+        HashSet<uint> visiting, HashSet<uint> baits)
     {
-        if (!visited.Add(fish)) return;
+        if (resolved.TryGetValue(fish, out var known)) return known;
+        if (!visiting.Add(fish)) return false;
         if (!recipes.TryGetValue(fish, out var recipe))
         {
-            unknown.Add(fish);
-            return;
+            visiting.Remove(fish);
+            resolved[fish] = false;
+            return false;
         }
+        var found = false;
         if (recipe.B != 0)
         {
-            if (isBait(recipe.B)) baits.Add(recipe.B);
-            else Visit(recipe.B, isBait, visited, baits, unknown);
+            if (isBait(recipe.B))
+            {
+                baits.Add(recipe.B);
+                found = true;
+            }
+            else found = Visit(recipe.B, isBait, resolved, visiting, baits);
         }
-        foreach (var mooch in recipe.M) Visit(mooch, isBait, visited, baits, unknown);
-        foreach (var predator in recipe.P) Visit(predator, isBait, visited, baits, unknown);
-        if (recipe.B == 0 && recipe.M.Length == 0 && recipe.P.Length == 0) unknown.Add(fish);
+        // GatherBuddy Reborn's explicit InitialBait takes precedence for a mooch
+        // route. Only inherit the source fish's bait when it has no initial bait.
+        if (recipe.B == 0)
+            foreach (var mooch in recipe.M) found = Visit(mooch, isBait, resolved, visiting, baits) || found;
+        foreach (var predator in recipe.P) found = Visit(predator, isBait, resolved, visiting, baits) || found;
+        visiting.Remove(fish);
+        resolved[fish] = found;
+        return found;
     }
 }

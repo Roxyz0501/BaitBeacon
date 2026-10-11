@@ -16,7 +16,7 @@ public sealed unsafe class InventoryOverlay(IGameGui gui)
 
     public void Draw(IReadOnlySet<uint> bait, Configuration config)
     {
-        if (bait.Count == 0) return;
+        if (!config.HighlightEnabled || bait.Count == 0) return;
         var order = ItemOrderModule.Instance();
         var inventory = InventoryManager.Instance();
         if (order == null || inventory == null) return;

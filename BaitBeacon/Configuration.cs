@@ -8,6 +8,7 @@ public sealed class Configuration : IPluginConfiguration
     public int Version { get; set; } = 1;
     public string? Language { get; set; }
     public string SelectedList { get; set; } = string.Empty;
+    public bool HighlightEnabled { get; set; } = true;
     public bool HighlightInventory { get; set; } = true;
     public bool HighlightSaddlebag { get; set; } = true;
     public bool HighlightRetainer { get; set; } = true;

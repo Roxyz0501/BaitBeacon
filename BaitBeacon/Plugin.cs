@@ -23,7 +23,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly BaitCatalog catalog;
     private readonly InventoryOverlay overlay;
     private readonly LocalizedFonts fonts;
-    private readonly HashSet<uint> fishIds;
+    private readonly HashSet<uint> rodFishIds;
     private readonly HashSet<uint> baitIds;
     private BaitResult current = new(new HashSet<uint>(), new HashSet<uint>());
     private DateTime nextReload = DateTime.MinValue;
@@ -46,16 +46,15 @@ public sealed class Plugin : IDalamudPlugin
         lists = new SavedLists(pi.GetPluginConfigDirectory());
         catalog = new BaitCatalog();
         overlay = new InventoryOverlay(gui);
-        fishIds = data.GetExcelSheet<FishParameter>()
+        rodFishIds = data.GetExcelSheet<FishParameter>()
             .Select(x => x.Item.RowId).Where(x => x != 0).ToHashSet();
-        fishIds.UnionWith(data.GetExcelSheet<SpearfishingItem>()
-            .Select(x => x.Item.RowId).Where(x => x != 0));
         baitIds = data.GetExcelSheet<Item>().Where(x => x.ItemSearchCategory.RowId == 30)
             .Select(x => x.RowId).ToHashSet();
         baitIds.UnionWith(data.GetExcelSheet<WKSItemInfo>()
             .Where(x => x.WKSItemSubCategory.RowId == 5)
             .Select(x => x.Item.RowId).Where(x => x != 0));
-        fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas, FontItemNames());
+        fonts = new LocalizedFonts(pi.UiBuilder.FontAtlas,
+            FontItemNames().Concat(lists.Lists.SelectMany(x => new[] { x.Name, x.Folder })));
         Recalculate();
 
         commands.AddHandler(Command, new CommandInfo((_, _) => open = true)
@@ -89,7 +88,7 @@ public sealed class Plugin : IDalamudPlugin
         var selected = lists.Lists.FirstOrDefault(x => x.Key == config.SelectedList);
         current = selected is null
             ? new BaitResult(new HashSet<uint>(), new HashSet<uint>())
-            : catalog.Resolve(selected.ItemIds.Where(fishIds.Contains), baitIds.Contains);
+            : catalog.Resolve(selected.ItemIds.Where(rodFishIds.Contains), baitIds.Contains);
     }
 
     private void Draw()
@@ -166,13 +165,19 @@ public sealed class Plugin : IDalamudPlugin
             }
         }
         if (ImGui.Button(T("Reload"))) { lists.Reload(); Recalculate(); }
+        var highlight = config.HighlightEnabled;
+        if (ImGui.Checkbox(T("HighlightEnabled") + "###HighlightEnabledLists", ref highlight))
+        {
+            config.HighlightEnabled = highlight;
+            Save();
+        }
         ImGui.Separator();
         ImGui.TextUnformatted(T("Bait"));
         if (current.BaitIds.Count == 0) ImGui.TextUnformatted(T("None"));
         foreach (var id in current.BaitIds.OrderBy(ItemName))
         {
             var count = CountPlayerItem(id);
-            ImGui.BulletText($"{ItemName(id)}  —  {string.Format(T("Count"), count)}");
+            ImGui.BulletText($"{ItemName(id)}  |  {string.Format(T("Count"), count)}");
         }
         if (current.UnknownFishIds.Count > 0)
         {
@@ -190,11 +195,14 @@ public sealed class Plugin : IDalamudPlugin
         PluginStatus("GatherBuddy");
         ImGui.TextWrapped(T("Original"));
         ImGui.Separator();
+        var highlight = Toggle("HighlightEnabled", config.HighlightEnabled);
         var player = Toggle("Inventory", config.HighlightInventory);
         var saddle = Toggle("Saddlebag", config.HighlightSaddlebag);
         var retainer = Toggle("Retainer", config.HighlightRetainer);
-        if (player != config.HighlightInventory || saddle != config.HighlightSaddlebag || retainer != config.HighlightRetainer)
+        if (highlight != config.HighlightEnabled || player != config.HighlightInventory
+            || saddle != config.HighlightSaddlebag || retainer != config.HighlightRetainer)
         {
+            config.HighlightEnabled = highlight;
             config.HighlightInventory = player;
             config.HighlightSaddlebag = saddle;
             config.HighlightRetainer = retainer;
@@ -225,7 +233,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private IEnumerable<string> FontItemNames()
     {
-        var ids = fishIds.Concat(baitIds).Distinct().ToArray();
+        var ids = rodFishIds.Concat(baitIds).Distinct().ToArray();
         foreach (var language in new[] { ClientLanguage.Japanese, ClientLanguage.English,
                      ClientLanguage.German, ClientLanguage.French })
         {

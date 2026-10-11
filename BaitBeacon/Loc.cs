@@ -28,6 +28,7 @@ public static class Loc
         ["NoSelection"] = ["リストを選択してください。", "Select a list.", "Wähle eine Liste.", "Sélectionnez une liste.", "목록을 선택하세요.", "请选择列表。", "請選擇清單。"],
         ["Bait"] = ["必要な餌", "Required bait", "Benötigter Köder", "Appâts requis", "필요한 미끼", "所需鱼饵", "所需魚餌"],
         ["Unknown"] = ["餌データ未登録の魚", "Fish without bait data", "Fische ohne Köderdaten", "Poissons sans données d’appât", "미끼 정보가 없는 물고기", "缺少鱼饵数据的鱼", "缺少魚餌資料的魚"],
+        ["HighlightEnabled"] = ["ハイライトを有効にする", "Enable highlighting", "Hervorhebung aktivieren", "Activer le surlignage", "강조 표시 사용", "启用高亮", "啟用醒目提示"],
         ["Inventory"] = ["所持品の強調表示", "Highlight inventory", "Inventar hervorheben", "Surligner l’inventaire", "소지품 강조", "高亮背包", "醒目提示背包"],
         ["Saddlebag"] = ["チョコボかばんの強調表示", "Highlight saddlebags", "Chocobo-Taschen hervorheben", "Surligner les sacoches", "초코보 가방 강조", "高亮陆行鸟鞍囊", "醒目提示陸行鳥鞍囊"],
         ["Retainer"] = ["リテイナーの強調表示", "Highlight retainers", "Gehilfen-Inventar hervorheben", "Surligner les servants", "집사 소지품 강조", "高亮雇员背包", "醒目提示雇員背包"],
@@ -39,6 +40,8 @@ public static class Loc
     };
 
     public static IEnumerable<string> AllStrings => Text.Values.SelectMany(x => x);
+    public static string FontText => string.Concat(AllStrings) + string.Concat(Languages.Select(x => x.Native))
+        + "—…\u202F\u00A0";
     public static ClientLanguage GameDataLanguage(string? code) => code switch
     {
         "ja" => ClientLanguage.Japanese,
