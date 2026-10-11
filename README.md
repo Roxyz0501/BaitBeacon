@@ -12,6 +12,8 @@ Open `/baitbeacon`, select a saved list, and open your inventory. The plugin rea
 
 Original GatherBuddy has gathering lists but no compatible Auto-Gather list file, so it is shown as informational and is not used as a source.
 
+The bundled fish-to-bait data is a snapshot of upstream data on 2026-10-11. Fish absent from that data are listed separately instead of guessed. GatherBuddy Reborn user-defined fish overrides are not read.
+
 ## Languages
 
 Config offers Japanese, English, German, French, Korean, Simplified Chinese, and Traditional Chinese. At first run, game language is preferred, then a supported Dalamud UI language, then English. The chosen language is saved and can be changed at any time. Game item names use the language data provided by the game.
