@@ -4,7 +4,7 @@ An independent Dalamud plugin by Roxyz0501. Select a saved GatherBuddy Reborn Au
 
 ## Status
 
-Development build. In-game placement and font coverage still require verification. No release has been published.
+Public preview `0.1.0.0`. In-game placement and font coverage still require verification.
 
 ## Use
 

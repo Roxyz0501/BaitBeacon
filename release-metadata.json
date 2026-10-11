@@ -1,5 +1,5 @@
 {
-  "Published": false,
+  "Published": true,
   "InternalName": "BaitBeacon",
   "Name": "Bait Beacon",
   "Author": "Roxyz0501",
@@ -10,8 +10,8 @@
   "DalamudApiLevel": 15,
   "RepoUrl": "https://github.com/Roxyz0501/BaitBeacon",
   "IconUrl": "https://raw.githubusercontent.com/Roxyz0501/BaitBeacon/main/BaitBeacon/images/icon.png",
-  "DownloadLinkInstall": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0/BaitBeacon.zip",
-  "DownloadLinkTesting": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0/BaitBeacon.zip",
-  "DownloadLinkUpdate": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0/BaitBeacon.zip",
+  "DownloadLinkInstall": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0.0/BaitBeacon-0.1.0.0.zip",
+  "DownloadLinkTesting": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0.0/BaitBeacon-0.1.0.0.zip",
+  "DownloadLinkUpdate": "https://github.com/Roxyz0501/BaitBeacon/releases/download/v0.1.0.0/BaitBeacon-0.1.0.0.zip",
   "Dependencies": ["GatherBuddyReborn (saved Auto-Gather list)"]
 }
