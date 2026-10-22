@@ -1,6 +1,8 @@
 using BaitBeacon;
 using Roxyz0501.Dalamud.CommonUi;
 
+PersistenceChecks.Run();
+
 static void Check(bool result, string name)
 {
     if (!result) throw new Exception(name);

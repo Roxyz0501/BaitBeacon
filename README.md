@@ -4,7 +4,15 @@ An independent Dalamud plugin by Roxyz0501. Select a saved GatherBuddy Reborn Au
 
 ## Status
 
-Public preview `1.0.0.1`. The Lists tab is followed by the shared Settings, Language settings, and Support tabs. In-game overlay placement and font coverage still require verification.
+Public preview `1.0.0.2`. The Lists tab is followed by the shared Settings, Language settings, and Support tabs. In-game overlay placement and font coverage still require verification.
+
+Version 1.0.0.2 includes the 2026-10-22 audit fixes. See [audit implementation and validation](AUDIT_FIX_2026-10-22.md).
+
+## Settings and recovery
+
+Settings apply immediately and are saved only when changed, at 60-second intervals and on logout, normal shutdown or plugin disposal. The existing configuration file is retained; up to three valid previous versions are kept in its adjacent `.backups` directory. Corrupt primary files are preserved separately before recovery. A forced termination may lose changes since the last successful save (up to approximately 60 seconds).
+
+Highlighting and saved-list reads pause after three consecutive failures, with three seconds between retries. The plugin retains the last valid list. Use **Reload** on Lists to restart reading, or **Retry** in the error notice to resume highlighting/saving. Settings save failures retry at 60-second intervals, then pause; shutdown makes at most one additional attempt for the same unsaved snapshot. An unreadable configuration at startup requires an explicit retry before it can be replaced. Saved-list input is limited to 8 MiB. No transaction history is recorded.
 
 ## Use
 

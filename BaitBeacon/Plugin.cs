@@ -20,6 +20,11 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IGameInventory gameInventory;
     private readonly IDataManager data;
     private readonly IPluginLog log;
+    private readonly IClientState client;
+    private readonly ConfigurationStore settings;
+    private readonly FailureCircuit overlayFailures;
+    private readonly CancellationTokenRegistration shutdownRegistration;
+    private readonly CancellationTokenRegistration unloadRegistration;
     private readonly Configuration config;
     private readonly SavedLists lists;
     private readonly BaitCatalog catalog;
@@ -28,11 +33,14 @@ public sealed class Plugin : IDalamudPlugin
     private readonly HashSet<uint> rodFishIds;
     private readonly HashSet<uint> baitIds;
     private BaitResult current = new(new HashSet<uint>(), new HashSet<uint>());
-    private DateTime nextReload = DateTime.MinValue;
+    private long lastReload = Environment.TickCount64;
+    private volatile bool stopping;
+    private bool disposed;
     private bool open;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
-        IGameGui gui, IGameInventory gameInventory, IDataManager data, IClientState client, IPluginLog log)
+        IGameGui gui, IGameInventory gameInventory, IDataManager data, IClientState client, IPluginLog log,
+        IGameLifecycle lifecycle)
     {
         this.pi = pi;
         this.commands = commands;
@@ -40,12 +48,21 @@ public sealed class Plugin : IDalamudPlugin
         this.gameInventory = gameInventory;
         this.data = data;
         this.log = log;
-        config = pi.GetPluginConfig() as Configuration ?? new Configuration();
+        this.client = client;
+        settings = new ConfigurationStore(pi.ConfigFile.FullName, ex => ReportStopped(ex, "Configuration saving"),
+            onFinalFailure: ex =>
+            {
+                log.Error(ex, "Final configuration flush failed. Last saved settings remain on disk. Use Retry in /baitbeacon.");
+                open = true;
+            });
+        config = settings.Configuration;
+        if (settings.Recovered || settings.LoadWarning is not null) open = true;
+        overlayFailures = new FailureCircuit(TimeSpan.FromSeconds(3), ex => ReportStopped(ex, "Inventory highlighting"));
         ClientLanguage? game;
         try { game = client.ClientLanguage; } catch { game = null; }
         Loc.CheckCompleteness();
         if (config.InitializeLanguage(game, pi.UiLanguage)) Save();
-        lists = new SavedLists(pi.GetPluginConfigDirectory());
+        lists = new SavedLists(pi.GetPluginConfigDirectory(), ex => ReportStopped(ex, "Saved list reading"));
         catalog = new BaitCatalog();
         overlay = new InventoryOverlay(gui);
         rodFishIds = data.GetExcelSheet<FishParameter>()
@@ -68,22 +85,30 @@ public sealed class Plugin : IDalamudPlugin
         pi.UiBuilder.Draw += Draw;
         pi.UiBuilder.OpenMainUi += Open;
         pi.UiBuilder.OpenConfigUi += Open;
+        client.Logout += OnLogout;
+        shutdownRegistration = lifecycle.GameShuttingDownToken.Register(StopSaving);
+        unloadRegistration = lifecycle.DalamudUnloadingToken.Register(StopSaving);
     }
 
     private void Open() => open = true;
     private string T(string key) => Loc.Get(config.Language, key);
-    private void Save() => pi.SavePluginConfig(config);
+    private void Save() => settings.Update(config);
+    private void OnLogout(int type, int code) => settings.Flush();
+    private void StopSaving() { stopping = true; settings.Dispose(); }
+    private void ReportStopped(Exception ex, string operation)
+    {
+        log.Error(ex, "{Operation} stopped after three failures. Open /baitbeacon and use Retry.", operation);
+        open = true;
+    }
 
     private void Update(IFramework _)
     {
-        if (DateTime.UtcNow < nextReload) return;
-        nextReload = DateTime.UtcNow.AddSeconds(3);
-        try
-        {
-            lists.Reload();
-            Recalculate();
-        }
-        catch (Exception ex) { log.Error(ex, "Failed to refresh saved GatherBuddy Reborn lists."); }
+        if (stopping) return;
+        settings.Tick();
+        var now = Environment.TickCount64;
+        if (now - lastReload < 3000) return;
+        lastReload = now;
+        if (lists.Reload()) Recalculate();
     }
 
     private void Recalculate()
@@ -96,14 +121,15 @@ public sealed class Plugin : IDalamudPlugin
 
     private void Draw()
     {
-        try { overlay.Draw(current.BaitIds, config); }
-        catch (Exception ex) { log.Error(ex, "Could not draw inventory bait markers."); }
+        if (stopping) return;
+        overlayFailures.Run(() => overlay.Draw(current.BaitIds, config));
         if (!open) return;
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(610, 510), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(390, 290), new Vector2(float.MaxValue));
         if (ImGui.Begin(T("Title") + "###BaitBeacon", ref open))
         {
+            DrawRecovery();
             if (ImGui.BeginTabBar("BaitBeaconTabs"))
             {
                 if (ImGui.BeginTabItem(T("Lists") + "###Lists"))
@@ -142,7 +168,7 @@ public sealed class Plugin : IDalamudPlugin
                 ImGui.EndCombo();
             }
         }
-        if (ImGui.Button(T("Reload"))) { lists.Reload(); Recalculate(); }
+        if (ImGui.Button(T("Reload"))) { if (lists.Reload(retry: true)) Recalculate(); }
         var highlight = config.HighlightEnabled;
         if (ImGui.Checkbox(T("HighlightEnabled") + "###HighlightEnabledLists", ref highlight))
         {
@@ -185,6 +211,39 @@ public sealed class Plugin : IDalamudPlugin
             config.HighlightSaddlebag = saddle;
             config.HighlightRetainer = retainer;
             Save();
+        }
+    }
+
+    private void DrawRecovery()
+    {
+        if (lists.Stopped)
+        {
+            ImGui.TextWrapped(T("ListStopped"));
+            ImGui.TextUnformatted(lists.LastError?.Message ?? "");
+        }
+        if (overlayFailures.Stopped)
+        {
+            ImGui.TextWrapped(T("OverlayStopped"));
+            ImGui.TextUnformatted(overlayFailures.LastError?.Message ?? "");
+            if (ImGui.Button(T("Retry") + "###RetryOverlay")) overlayFailures.Retry();
+        }
+        if (settings.Recovered) ImGui.TextWrapped(T("ConfigRecovered"));
+        if (settings.LoadWarning is not null) ImGui.TextWrapped(T("ConfigLoadWarning"));
+        var saveError = settings.LastError;
+        if (saveError is not null)
+        {
+            if (!settings.LoadBlocked) ImGui.TextWrapped(T(settings.Stopped ? "SaveStopped" : "SavePending"));
+            ImGui.TextUnformatted(saveError.Message);
+            if (ImGui.Button(T("Retry") + "###RetrySave"))
+            {
+                settings.Retry();
+                if (!settings.LoadBlocked)
+                {
+                    if (config.InitializeLanguage(client.ClientLanguage, pi.UiLanguage)) Save();
+                    commandInfo.HelpMessage = T("CommandHelp");
+                    Recalculate();
+                }
+            }
         }
     }
 
@@ -247,11 +306,18 @@ public sealed class Plugin : IDalamudPlugin
 
     public void Dispose()
     {
+        if (disposed) return;
+        disposed = true;
+        stopping = true;
         framework.Update -= Update;
         pi.UiBuilder.Draw -= Draw;
         pi.UiBuilder.OpenMainUi -= Open;
         pi.UiBuilder.OpenConfigUi -= Open;
+        client.Logout -= OnLogout;
         commands.RemoveHandler(Command);
-        fonts.Dispose();
+        shutdownRegistration.Dispose();
+        unloadRegistration.Dispose();
+        try { settings.Dispose(); }
+        finally { fonts.Dispose(); }
     }
 }
