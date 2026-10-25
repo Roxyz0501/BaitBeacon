@@ -62,7 +62,9 @@ public sealed class BaitCatalog
         // route. Only inherit the source fish's bait when it has no initial bait.
         if (recipe.B == 0)
             foreach (var mooch in recipe.M) found = Visit(mooch, isBait, resolved, visiting, baits) || found;
-        foreach (var predator in recipe.P) found = Visit(predator, isBait, resolved, visiting, baits) || found;
+        // Prerequisite fish cannot substitute for the target's own bait route.
+        // Visit every prerequisite even after a failure so known bait stays visible.
+        foreach (var predator in recipe.P) found = Visit(predator, isBait, resolved, visiting, baits) && found;
         visiting.Remove(fish);
         resolved[fish] = found;
         return found;

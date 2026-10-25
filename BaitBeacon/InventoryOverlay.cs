@@ -87,7 +87,7 @@ public sealed unsafe class InventoryOverlay(IGameGui gui)
     private void DrawGrid(string name, ItemOrderModuleSorter* sorter, InventoryManager* inventory,
         IReadOnlySet<uint> bait, int page, int typeBase)
     {
-        if (page is < 0 or > 4) return;
+        if (!InventoryPages.IsValid(typeBase, page)) return;
         var grid = gui.GetAddonByName<AtkUnitBase>(name);
         if (!Visible(grid)) return;
         for (var cell = 0; cell < 35; cell++)
@@ -100,9 +100,9 @@ public sealed unsafe class InventoryOverlay(IGameGui gui)
     private static bool Matches(ItemOrderModuleSorter* sorter, InventoryManager* inventory,
         IReadOnlySet<uint> bait, int sortedIndex, int typeBase)
     {
-        if (sorter == null || sorter->Items.First == null || sortedIndex >= sorter->Items.Count) return false;
+        if (sorter == null || sorter->Items.First == null || sortedIndex < 0 || sortedIndex >= sorter->Items.Count) return false;
         var entry = sorter->Items[sortedIndex].Value;
-        if (entry == null || entry->Slot >= 35 || entry->Page >= 5) return false;
+        if (entry == null || entry->Slot >= 35 || !InventoryPages.IsValid(typeBase, entry->Page)) return false;
         var bag = inventory->GetInventoryContainer((InventoryType)(typeBase + entry->Page));
         if (bag == null || !bag->IsLoaded || entry->Slot >= bag->Size) return false;
         var item = bag->GetInventorySlot(entry->Slot);

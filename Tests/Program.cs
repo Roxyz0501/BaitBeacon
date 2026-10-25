@@ -33,6 +33,32 @@ try
     Check(lists.Error == "read" && lists.Lists.Count == 2, "partial rewrite keeps last valid list");
 
     var catalog = new BaitCatalog();
+    var coverage = new GlyphCoverage();
+    Check(coverage.Include(["Fishing"]) && coverage.Include(["麒麟", "龍"])
+        && "麒麟龍".All(coverage.Text.Contains), "new list glyphs included after startup");
+    Check(!coverage.Include(["龍", "Fishing", "麒麟"]), "unchanged glyphs require no font rebuild");
+    foreach (var malformed in new[] { "[null]", "[{}]", "[{\"Name\":\"Bad\",\"ItemIds\":null}]",
+                 "[{\"Name\":\"Bad\",\"ItemIds\":[\"36679\"]}]",
+                 "[{\"Name\":\"Bad\",\"ItemIds\":[36679],\"EnabledItems\":{\"36679\":\"false\"}}]" })
+    {
+        var previous = lists.Lists;
+        File.WriteAllText(path, malformed);
+        Check(!lists.Reload(retry: true) && lists.Error == "read" && ReferenceEquals(previous, lists.Lists),
+            "malformed schema retains last snapshot: " + malformed);
+    }
+    File.WriteAllText(path, "[]");
+    Check(lists.Reload(retry: true) && lists.Lists.Count == 0, "valid empty list clears snapshot");
+    Check(catalog.Resolve([8760], id => id == 2603).UnknownFishIds.Contains(8760),
+        "known predator bait does not hide missing target bait");
+    Check(catalog.Resolve([8760], id => id == 2625).UnknownFishIds.Contains(8760),
+        "known target bait does not hide missing prerequisite bait");
+    var complete = catalog.Resolve([8760], id => id is 2625 or 2603);
+    Check(complete.UnknownFishIds.Count == 0 && complete.BaitIds.SetEquals([2625u, 2603u]),
+        "complete target and predator bait retained");
+    foreach (var (typeBase, count) in new[] { (0, 4), (10000, 7), (4000, 2), (4100, 2) })
+        Check(Enumerable.Range(0, count).All(page => InventoryPages.IsValid(typeBase, page))
+            && !InventoryPages.IsValid(typeBase, -1) && !InventoryPages.IsValid(typeBase, count),
+            "inventory page bounds " + typeBase);
     var baits = catalog.Resolve([36679, 41299], id => id is 36593 or 38808);
     Check(baits.BaitIds.ToHashSet().SetEquals([36593u, 38808u]), "direct and mooch bait resolution");
     Check(baits.UnknownFishIds.Count == 0, "known fish resolved");

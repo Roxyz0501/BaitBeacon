@@ -37,6 +37,7 @@ public sealed class Plugin : IDalamudPlugin
     private volatile bool stopping;
     private bool disposed;
     private bool open;
+    private bool refreshListGlyphs;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
         IGameGui gui, IGameInventory gameInventory, IDataManager data, IClientState client, IPluginLog log,
@@ -113,6 +114,7 @@ public sealed class Plugin : IDalamudPlugin
 
     private void Recalculate()
     {
+        refreshListGlyphs = true;
         var selected = lists.Lists.FirstOrDefault(x => x.Key == config.SelectedList);
         current = selected is null
             ? new BaitResult(new HashSet<uint>(), new HashSet<uint>())
@@ -124,6 +126,11 @@ public sealed class Plugin : IDalamudPlugin
         if (stopping) return;
         overlayFailures.Run(() => overlay.Draw(current.BaitIds, config));
         if (!open) return;
+        if (refreshListGlyphs)
+        {
+            fonts.Ensure(lists.Lists.SelectMany(x => new[] { x.Name, x.Folder }));
+            refreshListGlyphs = false;
+        }
         using var font = fonts.Push(config.Language);
         ImGui.SetNextWindowSize(new Vector2(610, 510), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Vector2(390, 290), new Vector2(float.MaxValue));
@@ -178,9 +185,10 @@ public sealed class Plugin : IDalamudPlugin
         ImGui.Separator();
         ImGui.TextUnformatted(T("Bait"));
         if (current.BaitIds.Count == 0) ImGui.TextUnformatted(T("None"));
+        var counts = CountPlayerItems();
         foreach (var id in current.BaitIds.OrderBy(ItemName))
         {
-            var count = CountPlayerItem(id);
+            var count = counts.GetValueOrDefault(id);
             ImGui.BulletText($"{ItemName(id)}  |  {string.Format(T("Count"), count)}");
         }
         if (current.UnknownFishIds.Count > 0)
@@ -294,14 +302,16 @@ public sealed class Plugin : IDalamudPlugin
         }
     }
 
-    private int CountPlayerItem(uint id)
+    private Dictionary<uint, int> CountPlayerItems()
     {
-        var count = 0;
+        var counts = new Dictionary<uint, int>();
+        if (current.BaitIds.Count == 0) return counts;
         foreach (var type in new[] { GameInventoryType.Inventory1, GameInventoryType.Inventory2,
                      GameInventoryType.Inventory3, GameInventoryType.Inventory4 })
             foreach (var item in gameInventory.GetInventoryItems(type))
-                if (item.ItemId == id) count += item.Quantity;
-        return count;
+                if (current.BaitIds.Contains(item.ItemId))
+                    counts[item.ItemId] = counts.GetValueOrDefault(item.ItemId) + item.Quantity;
+        return counts;
     }
 
     public void Dispose()

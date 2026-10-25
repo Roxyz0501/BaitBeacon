@@ -65,19 +65,27 @@ public sealed class SavedLists
             var parsed = new List<SavedList>();
             foreach (var row in json.RootElement.EnumerateArray())
             {
-                if (row.ValueKind != JsonValueKind.Object || !row.TryGetProperty("Name", out var nameValue)) continue;
+                if (row.ValueKind != JsonValueKind.Object || !row.TryGetProperty("Name", out var nameValue)
+                    || nameValue.ValueKind != JsonValueKind.String) throw new JsonException("Invalid list name.");
                 var name = nameValue.GetString() ?? string.Empty;
-                if (name.Length == 0) continue;
+                if (name.Length == 0) throw new JsonException("Empty list name.");
                 var folder = row.TryGetProperty("FolderPath", out var folderValue) ? folderValue.GetString() ?? string.Empty : string.Empty;
                 var disabled = new HashSet<uint>();
-                if (row.TryGetProperty("EnabledItems", out var enabledValue) && enabledValue.ValueKind == JsonValueKind.Object)
+                if (row.TryGetProperty("EnabledItems", out var enabledValue))
+                {
+                    if (enabledValue.ValueKind != JsonValueKind.Object) throw new JsonException("Invalid enabled items.");
                     foreach (var item in enabledValue.EnumerateObject())
-                        if (uint.TryParse(item.Name, out var id) && item.Value.ValueKind == JsonValueKind.False)
-                            disabled.Add(id);
-                var ids = row.TryGetProperty("ItemIds", out var items) && items.ValueKind == JsonValueKind.Array
-                    ? items.EnumerateArray().Where(x => x.ValueKind == JsonValueKind.Number)
-                        .Select(x => x.GetUInt32()).Where(x => x != 0 && !disabled.Contains(x)).Distinct().ToArray()
-                    : [];
+                    {
+                        if (!uint.TryParse(item.Name, out var id)
+                            || item.Value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
+                            throw new JsonException("Invalid enabled item value.");
+                        if (item.Value.ValueKind == JsonValueKind.False) disabled.Add(id);
+                    }
+                }
+                if (!row.TryGetProperty("ItemIds", out var items) || items.ValueKind != JsonValueKind.Array)
+                    throw new JsonException("Invalid item IDs.");
+                var ids = items.EnumerateArray().Select(x => x.GetUInt32())
+                    .Where(x => x != 0 && !disabled.Contains(x)).Distinct().ToArray();
                 parsed.Add(new SavedList(folder + "/" + name, name, folder, ids));
             }
             Lists = parsed;
