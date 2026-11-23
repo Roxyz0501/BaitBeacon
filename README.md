@@ -4,9 +4,9 @@ An independent Dalamud plugin by Roxyz0501. Select a saved GatherBuddy Reborn Au
 
 ## Status
 
-Public preview `1.0.0.3`. The Lists tab is followed by the shared Settings, Language settings, and Support tabs. In-game overlay placement and font coverage still require verification.
+Public preview `1.0.0.4`. The Lists tab is followed by the shared Settings, Language settings, and Support tabs. In-game overlay placement and font coverage still require verification.
 
-Version 1.0.0.3 includes the 2026-10-22 audit fixes. See [audit implementation and validation](AUDIT_FIX_2026-10-22.md).
+Version 1.0.0.4 includes the 2026-10-22 audit fixes. See [audit implementation and validation](AUDIT_FIX_2026-10-22.md).
 
 ## Settings and recovery
 

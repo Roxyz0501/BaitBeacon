@@ -13,6 +13,12 @@ internal sealed class LocalizedFonts : IDisposable
     public LocalizedFonts(IFontAtlas atlas, IEnumerable<string> itemNames)
     {
         this.atlas = atlas;
+        using var resource = typeof(LocalizedFonts).Assembly.GetManifestResourceStream("BaitBeacon.InfoGlyphs");
+        using var reader = new StreamReader(resource ?? throw new InvalidOperationException("Missing information glyphs."));
+        coverage.Include([reader.ReadToEnd()]);
+        using var dependency = typeof(LocalizedFonts).Assembly.GetManifestResourceStream("BaitBeacon.DependencyGlyphs");
+        using var dependencyReader = new StreamReader(dependency!);
+        coverage.Include([dependencyReader.ReadToEnd()]);
         Ensure(itemNames.Prepend(Loc.FontText + new string(Enumerable.Range(32, 95).Select(x => (char)x).ToArray())));
     }
 

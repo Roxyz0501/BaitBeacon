@@ -37,6 +37,15 @@ public sealed class Plugin : IDalamudPlugin
     private volatile bool stopping;
     private bool disposed;
     private bool open;
+    private readonly StandardPluginInfo info = new(new PluginDependency(
+        "GatherBuddyReborn", "GatherBuddy Reborn", false,
+        new InfoText("Creates saved Auto-Gather lists.", "保存済みAuto-Gatherリストの作成。",
+            "Erstellt gespeicherte Auto-Gather-Listen.", "Crée les listes Auto-Gather enregistrées.",
+            "저장된 Auto-Gather 목록 생성.", "创建已保存的Auto-Gather列表。", "建立已儲存的Auto-Gather清單。"),
+        new InfoText("Existing saved lists can be read while the plugin is disabled.", "保存済みリストがあれば、無効化中も読み込めます。",
+            "Gespeicherte Listen sind auch bei deaktiviertem Plugin lesbar.", "Les listes enregistrées restent lisibles si le plugin est désactivé.",
+            "플러그인이 비활성화되어도 저장된 목록을 읽을 수 있습니다.", "插件停用时仍可读取已有列表。", "停用外掛時仍可讀取現有清單。"),
+        "https://github.com/FFXIV-CombatReborn/GatherBuddyReborn"));
     private bool refreshListGlyphs;
 
     public Plugin(IDalamudPluginInterface pi, ICommandManager commands, IFramework framework,
@@ -147,7 +156,8 @@ public sealed class Plugin : IDalamudPlugin
                 StandardPluginTabs.DrawStandardTrailingTabs(
                     T("Settings"), "Settings", DrawSettings,
                     T("LanguageSettings"), DrawLanguageSettings,
-                    T("Support"), DrawSupport);
+                    T("Support"), DrawSupport,
+                    StandardPluginInfo.Title(config.Language ?? "en"), () => info.Draw(pi, config.Language ?? "en"));
                 ImGui.EndTabBar();
             }
         }
